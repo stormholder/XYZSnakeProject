@@ -5,9 +5,28 @@ namespace XYZSnakeProject.Snake;
 public class SnakeGameLogic : BaseGameLogic
 {
     private SnakeGameplayState _gameplayState = new();
+    private bool newGamePending = false;
+    private int currLevel = 0;
+    private ShowTextState showTextState = new(2f);
+
+    private void GotoGameOver()
+    {
+        currLevel = 0;
+        newGamePending = true;
+        showTextState.text = $"Game Over!";
+        ChangeState(showTextState);
+    }
+    private void GotoNextLevel()
+    {
+        currLevel++;
+        newGamePending = false;
+        showTextState.text = $"Level {currLevel}";
+        ChangeState(showTextState);
+    }
 
     public void GotoGameplay()
     {
+        _gameplayState.Level = currLevel;
         _gameplayState.FieldHeight = screenHeight;
         _gameplayState.FieldWidth = screenWidth;
         ChangeState(_gameplayState);
@@ -15,8 +34,21 @@ public class SnakeGameLogic : BaseGameLogic
     }
     public override void Update(float deltaTime)
     {
-        //_gameplayState.Update(deltaTime);
-        if (currentState != _gameplayState)
+        if (currentState != null && !currentState.IsDone())
+            return;
+        if (currentState == null || currentState == _gameplayState && !_gameplayState.GameOver)
+        {
+            GotoNextLevel();
+        }
+        else if (currentState == _gameplayState && !_gameplayState.GameOver)
+        {
+            GotoGameOver();
+        }
+        else if (currentState != _gameplayState && newGamePending)
+        {
+            GotoNextLevel();
+        }
+        else if (currentState != _gameplayState && !newGamePending)
         {
             GotoGameplay();
         }
